@@ -9,7 +9,6 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.sql.Timestamp; // Correct import
 import java.util.Date;
-
 @Entity
 @Getter
 @Setter
@@ -21,16 +20,26 @@ public class Internship {
     private Long id;
 
     private String title;
+
     @Lob
     private String description;
+
+    @Lob
     private String skills;
+
     @Lob
     private String details;
+
     private Date startDate;
     private Date endDate;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "department_id")
+    private Department department;
+
     @CreationTimestamp
     private Timestamp regdate;
+
     @UpdateTimestamp
     private Timestamp updatedate;
 

@@ -16,33 +16,42 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
+
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf().disable().cors().and().httpBasic().and()
-                .authorizeRequests().antMatchers("/authenticate").permitAll()
-                .antMatchers(HttpMethod.POST,"/candidates").permitAll()
-                .antMatchers(HttpMethod.POST, "/internships").hasRole("ADMIN")
-                .antMatchers(HttpMethod.GET, "/internships").permitAll()
-                .antMatchers(HttpMethod.GET, "/internships/{id}").permitAll()
-                .anyRequest()
-                .authenticated().and().
-                exceptionHandling().and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        httpSecurity
+                .csrf().disable()
+                .cors().and()
+                .httpBasic().and()
+                .authorizeRequests()
+                .antMatchers("/authenticate").permitAll()
+                .antMatchers(HttpMethod.PUT, "/applications/{internshipId}/{candidateId}").hasAuthority("ROLE_[ADMIN]")
+                .antMatchers(HttpMethod.POST, "/applications/save").hasAuthority("ROLE_[CANDIDATE]")
+                .antMatchers(HttpMethod.POST, "/candidates").permitAll()
+                .antMatchers(HttpMethod.GET, "/departments").permitAll()
+                .antMatchers("/candidates/usernames").permitAll()
+                .antMatchers(HttpMethod.POST, "/internships").hasAuthority("ROLE_ADMIN")
+                .antMatchers(HttpMethod.GET, "/internships", "/internships/{id}", "/internships/department/{departmentId}").permitAll()
+                .antMatchers("/sendMail").hasAuthority("ROLE_ADMIN")
+                .anyRequest().authenticated().and()
+                .exceptionHandling().and()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
         httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
-
     }
-
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService)
                 .passwordEncoder(passwordEncoder());
     }
+
     @Override
     @Bean
     public AuthenticationManager authenticationManagerBean() throws Exception {

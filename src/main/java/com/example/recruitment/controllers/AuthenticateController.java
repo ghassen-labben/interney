@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,13 +26,18 @@ public class AuthenticateController {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    @GetMapping(value = "/user" )
-    public String firstPage(HttpServletRequest request) {
-        System.out.println(request.getHeader("Authorization"));
-        System.out.println(request.getCookies());
-        System.out.println(request.getAuthType());
-        return "Hello Users";
+
+
+    @GetMapping( "/user" )
+    public UserDetails firstPage(HttpServletRequest request) {
+String username=jwtTokenUtil.extractUsername(request.getHeader("Authorization").split(" ")[1]);
+UserDetails userDetails=userDetailsService.loadUserByUsername(username);
+
+        return userDetails;
     }
+
+
+
     @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
     public AuthenticationResponse createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
 
@@ -49,7 +55,7 @@ public class AuthenticateController {
                 .loadUserByUsername(authenticationRequest.getUsername());
 
         final String jwt = jwtTokenUtil.generateToken(userDetails);
-
-        return new AuthenticationResponse(jwt, userDetails.getAuthorities().toString());
+      String auth=  userDetails.getAuthorities().toString().substring(7,userDetails.getAuthorities().toString().length()-2);
+        return new AuthenticationResponse(jwt,auth);
     }
 }

@@ -18,10 +18,15 @@ public class RecruitmentApplication implements CommandLineRunner {
 private AdminRepository adminRepository;
 	@Override
 	public void run(String... args) throws Exception {
-
-BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
-		Admin admin=new Admin("admin","admin@siga.com",bCryptPasswordEncoder.encode("admin")
-				,"manager","rh");
-		adminRepository.save(admin);
+try {
+	BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
+	Admin admin=new Admin("admin","admin@siga.com",bCryptPasswordEncoder.encode("admin")
+			,"manager","rh");
+	adminRepository.save(admin);
+}
+catch (Exception e)
+{
+	System.out.println(e.getMessage());
+}
 	}
 }

@@ -16,7 +16,7 @@ import javax.persistence.*;
 @MappedSuperclass
 public class Person  {
 
-
+    @Column(unique = true)
     private String username;
     private String email;
     private String password;

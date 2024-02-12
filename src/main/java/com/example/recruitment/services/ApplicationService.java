@@ -1,13 +1,11 @@
 package com.example.recruitment.services;
 
-import com.example.recruitment.models.Application;
-import com.example.recruitment.models.Attachment;
-import com.example.recruitment.models.Candidate;
-import com.example.recruitment.models.Internship;
+import com.example.recruitment.models.*;
 import com.example.recruitment.repositories.ApplicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +15,12 @@ public class ApplicationService {
     private final CandidateService candidateService;
     private final AttachmentService attachmentService;
     private final ApplicationRepository applicationRepository;
-
+    @Transactional
+    public void updateApplicationStatus(Long internshipId, Long candidateId, ApplicationStatus newStatus) {
+        Application application = applicationRepository.findByInternshipIdAndCandidateId(internshipId, candidateId);
+        application.setResponseStatus(newStatus);
+        applicationRepository.save(application);
+    }
     @Autowired
     public ApplicationService(ApplicationRepository applicationRepository,
                               InternshipService internshipService,
@@ -38,24 +41,30 @@ public class ApplicationService {
         return applicationRepository.findById(id);
     }
 public List<Application> getApplicationsByCandidate(Long candidateid){return applicationRepository.findByCandidateId(candidateid);}
-    public Application saveApplicationWithDetails(
-                                                  Long internshipId,
-                                                  Long candidateId,
-                                                  String attachmentId) throws Exception {
-        Internship internship = internshipService.getInternshipById(internshipId)
-                .orElseThrow(() -> new Exception("Internship not found"));
+    public Application saveApplicationWithDetails(Internship internship, Candidate candidate, String attachmentId) throws Exception {
+        if (internship == null) {
+            throw new Exception("Internship cannot be null");
+        }
 
-        Candidate candidate = candidateService.getCandidateById(candidateId)
-                .orElseThrow(() -> new Exception("Candidate not found"));
+        if (candidate == null) {
+            throw new Exception("Candidate cannot be null");
+        }
+
+        if (applicationRepository.existsByInternshipIdAndCandidateId(internship.getId(), candidate.getId())) {
+            throw new Exception("You have already applied for this internship");
+        }
 
         Attachment attachment = attachmentService.getAttachment(attachmentId);
-Application application=new Application();
+        Application application = new Application();
         application.setInternship(internship);
         application.setCandidate(candidate);
         application.setCv(attachment);
-
-
         return applicationRepository.save(application);
+    }
+
+    public boolean existsByInternshipIdAndCandidateId(Long internshipId, Long candidateId)
+    {
+        return  this.applicationRepository.existsByInternshipIdAndCandidateId(internshipId,candidateId);
     }
 
     public void deleteApplication(Long id) {

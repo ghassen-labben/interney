@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 // CandidateController.java
 @RestController
@@ -35,6 +36,16 @@ public class CandidateController {
         Optional<Candidate> candidate = candidateService.getCandidateById(id);
         return candidate.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+
+    @GetMapping("/usernames")
+    public ResponseEntity<List<String>> getAllUsernames() {
+        List<String> usernames = candidateService.getAllCandidates()
+                .stream()
+                .map(Candidate::getUsername)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(usernames);
     }
 
     @PostMapping

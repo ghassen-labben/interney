@@ -1,5 +1,6 @@
 package com.example.recruitment.services;
 
+import com.example.recruitment.models.Department;
 import com.example.recruitment.models.Internship;
 import com.example.recruitment.repositories.InternshipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,10 @@ public class InternshipService {
         this.internshipRepository = internshipRepository;
     }
 
+    public List<Internship> getInternshipsByDepartment(Department department) {
+        return internshipRepository.findInternshipsByDepartment(department);
+    }
+
     public List<Internship> getAllInternships() {
         return internshipRepository.findAll();
     }
@@ -28,6 +33,23 @@ public class InternshipService {
 
     public Internship saveInternship(Internship internship) {
         return internshipRepository.save(internship);
+    }
+
+    public Internship updateInternship(Long id, Internship updatedInternship) {
+        Optional<Internship> internshipOptional = internshipRepository.findById(id);
+
+        if (internshipOptional.isPresent()) {
+            Internship internship = internshipOptional.get();
+            internship.setDepartment(updatedInternship.getDepartment());
+            internship.setSkills(updatedInternship.getSkills());
+            internship.setEndDate(updatedInternship.getEndDate());
+            internship.setStartDate(updatedInternship.getStartDate());
+            internship.setTitle(updatedInternship.getTitle());
+
+            return internshipRepository.save(internship);
+        } else {
+            return null;
+        }
     }
 
     public void deleteInternship(Long id) {
