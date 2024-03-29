@@ -55,7 +55,7 @@ UserDetails userDetails=userDetailsService.loadUserByUsername(username);
                 .loadUserByUsername(authenticationRequest.getUsername());
 
         final String jwt = jwtTokenUtil.generateToken(userDetails);
-      String auth=  userDetails.getAuthorities().toString().substring(7,userDetails.getAuthorities().toString().length()-2);
+      String auth=userDetails.getAuthorities().toString();
         return new AuthenticationResponse(jwt,auth);
     }
 }

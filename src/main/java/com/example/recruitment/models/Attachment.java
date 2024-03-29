@@ -5,10 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 @Entity
 @NoArgsConstructor
@@ -21,18 +18,23 @@ public class Attachment {
     @GenericGenerator(name="uuid",strategy = "uuid2")
     private String id;
 
-    public Attachment(String fileName, String fileType, String filePath) {
+    @Column(nullable = false)
+    private String fileName;
+
+    @Column(nullable = false)
+    private String fileType;
+
+    @Column(name = "file_path", nullable = false)
+    private String filePath;
+    @Column(nullable = false)
+    private String attachmentType;
+    public Attachment(String fileName, String fileType, String filePath, String attachmentType) {
         this.fileName = fileName;
         this.fileType = fileType;
         this.filePath = filePath;
+        this.attachmentType = attachmentType;
     }
-
-    private String fileName;
-    private String fileType;
-
-    @Column(name = "filePath", nullable = false)
-    private String filePath;
-
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id", nullable = false)
+    private Profile profile;
 }

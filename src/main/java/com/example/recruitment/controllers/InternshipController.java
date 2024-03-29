@@ -16,7 +16,7 @@ import java.util.Optional;
 
 // InternshipController.java
 @RestController
-@RequestMapping("/internships")
+@RequestMapping("/api/internships")
 @CrossOrigin("http://localhost:4200/")
 public class InternshipController {
 

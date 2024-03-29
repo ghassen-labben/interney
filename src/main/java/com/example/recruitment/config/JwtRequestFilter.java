@@ -1,9 +1,11 @@
 package com.example.recruitment.config;
 
 import com.example.recruitment.config.Utils;
+import com.example.recruitment.models.User;
 import com.example.recruitment.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -24,7 +26,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
     @Autowired
     private Utils jwtUtil;
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -42,6 +43,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+System.out.println(userDetails.getAuthorities());
 
             if (jwtUtil.validateToken(jwt, userDetails)) {
 
@@ -54,5 +56,6 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
         chain.doFilter(request, response);
     }
+
 
 }

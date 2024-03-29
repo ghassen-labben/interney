@@ -22,12 +22,16 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
-    public Attachment saveAttachment(MultipartFile file)  {
+    public Attachment saveAttachment(MultipartFile file,String attachmentType)  {
         try {
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
-
-            // You can configure the base directory in application.properties or application.yml
-            String baseDirectory = "cvs/";
+            String fileType = file.getContentType();
+            String baseDirectory="";
+            if (fileType != null && fileType.startsWith("image")) {
+                baseDirectory = "images/";
+            } else if (fileType != null && fileType.equals("application/pdf")) {
+                baseDirectory = "documents/";
+            }
             String filePath = baseDirectory + fileName;
 
             Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
@@ -36,6 +40,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             attachment.setFileName(fileName);
             attachment.setFilePath(filePath);
             attachment.setFileType(file.getContentType());
+            attachment.setAttachmentType(attachmentType);
 
             return attachmentRepository.save(attachment);
         } catch (IOException e) {

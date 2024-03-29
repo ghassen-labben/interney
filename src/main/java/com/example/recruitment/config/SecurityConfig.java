@@ -31,14 +31,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .httpBasic().and()
                 .authorizeRequests()
                 .antMatchers("/authenticate").permitAll()
-                .antMatchers(HttpMethod.PUT, "/applications/{internshipId}/{candidateId}").hasAuthority("ROLE_[ADMIN]")
-                .antMatchers(HttpMethod.POST, "/applications/save").hasAuthority("ROLE_[CANDIDATE]")
-                .antMatchers(HttpMethod.POST, "/candidates").permitAll()
-                .antMatchers(HttpMethod.GET, "/departments").permitAll()
-                .antMatchers("/candidates/usernames").permitAll()
-                .antMatchers(HttpMethod.POST, "/internships").hasAuthority("ROLE_ADMIN")
-                .antMatchers(HttpMethod.GET, "/internships", "/internships/{id}", "/internships/department/{departmentId}").permitAll()
-                .antMatchers("/sendMail").hasAuthority("ROLE_ADMIN")
+                .antMatchers(HttpMethod.POST,"/api/users").permitAll()
+
+                .antMatchers("/api/attachment/upload").hasAuthority("ROLE_USER")
+                .antMatchers("/api/profiles").hasAuthority("ROLE_USER")
+
                 .anyRequest().authenticated().and()
                 .exceptionHandling().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
