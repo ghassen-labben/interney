@@ -39,6 +39,16 @@ public class UserController {
         }
         return ResponseEntity.ok(user);
     }
+    @GetMapping("/usernames")
+    public ResponseEntity<String[]> getUsenames()
+    {
+        return ResponseEntity.ok(userRepository.findAllUsername());
+    }
+    @GetMapping("/emails")
+    public ResponseEntity<String[]> getEmails()
+    {
+        return ResponseEntity.ok(userRepository.findAllEmail());
+    }
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
@@ -62,6 +72,7 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (!userRepository.existsById(id)) {
@@ -70,4 +81,5 @@ public class UserController {
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
+
 }

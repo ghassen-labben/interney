@@ -13,4 +13,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "INNER JOIN FETCH user.authorities AS authorities " +
             "WHERE user.username = :username")
     User findByUsername(@Param("username") String username);
+
+    User findUserByEmail(String email);
+    @Query("select user.username FROM User user")
+    public String[] findAllUsername();
+    @Query("select user.email FROM User user")
+    public String[] findAllEmail();
 }

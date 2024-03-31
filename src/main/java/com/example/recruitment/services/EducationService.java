@@ -1,9 +1,9 @@
 package com.example.recruitment.services;
 
 import com.example.recruitment.models.Education;
+import com.example.recruitment.models.Profile;
 import com.example.recruitment.repositories.EducationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,20 +12,28 @@ import java.util.Optional;
 @Service
 public class EducationService {
     private final EducationRepository educationRepository;
+    @Autowired
+    private ProfileService profileService;
 
     @Autowired
     public EducationService(EducationRepository educationRepository) {
         this.educationRepository = educationRepository;
     }
-
-    // Create operation
-    public Education saveOrUpdateEducation(Education education) {
-
+    public Education save(Education education) {
             return educationRepository.save(education);
+    }
+    public List<Education> getEducationsByProfile(Education education, Profile profile)
+    {
+        return this.educationRepository.findEducationsByProfile(profile);
+    }
+    public void addEducation(Education education,Profile profile)
+    {
+        education =educationRepository.save(education);
+        profile.addEducation(education);
+        profileService.save(profile);
 
     }
 
-    // Read operation - Get all educations
     public List<Education> getAllEducations() {
         return educationRepository.findAll();
     }

@@ -1,6 +1,7 @@
 package com.example.recruitment.services;
 
 import com.example.recruitment.models.Attachment;
+import com.example.recruitment.models.Profile;
 import com.example.recruitment.repositories.AttachmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,16 +23,18 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
-    public Attachment saveAttachment(MultipartFile file,String attachmentType)  {
+    public Attachment saveAttachment(MultipartFile file, String attachmentType, Profile profile) {
         try {
             String fileName = StringUtils.cleanPath(file.getOriginalFilename());
             String fileType = file.getContentType();
-            String baseDirectory="";
+            String baseDirectory = "";
+
             if (fileType != null && fileType.startsWith("image")) {
                 baseDirectory = "images/";
             } else if (fileType != null && fileType.equals("application/pdf")) {
                 baseDirectory = "documents/";
             }
+
             String filePath = baseDirectory + fileName;
 
             Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
@@ -40,13 +43,15 @@ public class AttachmentServiceImpl implements AttachmentService {
             attachment.setFileName(fileName);
             attachment.setFilePath(filePath);
             attachment.setFileType(file.getContentType());
-            attachment.setAttachmentType(attachmentType);
+            attachment.setProfile(profile); // Associate the attachment with the provided profile
 
             return attachmentRepository.save(attachment);
         } catch (IOException e) {
+            e.printStackTrace(); // Handle the exception appropriately
             return null;
         }
     }
+
 
 
     @Override

@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -37,4 +38,24 @@ public class Contact {
         this.whatsapp = whatsapp;
         this.linkedin = linkedin;
     }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Contact contact = (Contact) o;
+        return Objects.equals(rue, contact.rue) &&
+                Objects.equals(codePostal, contact.codePostal) &&
+                Objects.equals(ville, contact.ville) &&
+                Objects.equals(pays, contact.pays) &&
+                Objects.equals(addressComplete, contact.addressComplete) &&
+                Objects.equals(telephone, contact.telephone) &&
+                Objects.equals(whatsapp, contact.whatsapp) &&
+                Objects.equals(linkedin, contact.linkedin);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(rue, codePostal, ville, pays, addressComplete, telephone, whatsapp, linkedin);
+    }
+
 }

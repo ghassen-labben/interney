@@ -1,5 +1,6 @@
 package com.example.recruitment.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,23 +19,22 @@ public class Attachment {
     @GenericGenerator(name="uuid",strategy = "uuid2")
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fileName;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String fileType;
 
-    @Column(name = "file_path", nullable = false)
+    @Column(name = "file_path", nullable = true)
     private String filePath;
-    @Column(nullable = false)
-    private String attachmentType;
-    public Attachment(String fileName, String fileType, String filePath, String attachmentType) {
+
+    public Attachment(String fileName, String fileType, String filePath) {
         this.fileName = fileName;
         this.fileType = fileType;
         this.filePath = filePath;
-        this.attachmentType = attachmentType;
     }
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "profile_id", nullable = false)
+    @JoinColumn(name = "profile_id", nullable = true)
     private Profile profile;
 }

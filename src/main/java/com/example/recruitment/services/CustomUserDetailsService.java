@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -19,8 +21,14 @@ public class CustomUserDetailsService implements UserDetailsService {
 private UserRepository userRepository;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user=null;
+        if(isEmail(username))
+            user=userRepository.findUserByEmail(username);
+        else
+            user = userRepository.findByUsername(username);
 
-        User user = userRepository.findByUsername(username);
+
+
         if (user != null) {
 
             List<SimpleGrantedAuthority> grantedAuthorities = user
@@ -37,5 +45,18 @@ private UserRepository userRepository;
 
 
         throw new UsernameNotFoundException("User not found with username: " + username);
+    }
+    public boolean isEmail(String inputString) {
+        // Regular expression pattern for matching an email address
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+
+        // Use Pattern class to compile the regex pattern
+        Pattern pattern = Pattern.compile(emailPattern);
+
+        // Use Matcher class to match the input string with the pattern
+        Matcher matcher = pattern.matcher(inputString);
+
+        // Return true if the input string matches the pattern
+        return matcher.matches();
     }
 }

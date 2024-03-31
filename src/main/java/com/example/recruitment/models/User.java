@@ -19,7 +19,6 @@ import java.util.Collection;
 @Setter
 @EqualsAndHashCode(of = "id")
 public class User implements UserDetails, Serializable {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID")
@@ -51,6 +50,8 @@ public class User implements UserDetails, Serializable {
     @OrderBy
     @JsonIgnore
     private Collection<Authority> authorities;
+
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
