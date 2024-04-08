@@ -1,19 +1,21 @@
 package com.example.recruitment.controllers;
 
 import com.example.recruitment.models.Authority;
+import com.example.recruitment.models.EmailDetails;
+import com.example.recruitment.models.Skill;
 import com.example.recruitment.models.User;
 import com.example.recruitment.repositories.AuthorityRepository;
 import com.example.recruitment.repositories.UserRepository;
+import com.example.recruitment.services.EmailService;
+import com.example.recruitment.services.SkillService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,8 +24,11 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
-    private AuthorityRepository authorityRepository;
+    private EmailService emailService;
+
+
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
@@ -31,6 +36,23 @@ public class UserController {
         return ResponseEntity.ok(users);
     }
 
+
+    @GetMapping("/employers")
+    public ResponseEntity<List<User>> getEmployers() {
+        List<User> users = userRepository.findAll();
+        List<User> employers = users.stream()
+                .filter(user -> user.getAuthorities()
+                        .stream()
+                        .anyMatch(authority -> authority.getAuthority().equals("ROLE_STAGIAIRE")
+                                || authority.getAuthority().equals("ROLE_ENCADRANT")
+                                || authority.getAuthority().equals("ROLE_DIRECTEUR")
+                                || authority.getAuthority().equals("ROLE_RH")
+                        )
+                )
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(employers);
+    }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userRepository.findById(id).orElse(null);
@@ -53,11 +75,16 @@ public class UserController {
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
         BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
-        user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-        Set<Authority> authorities=new HashSet<>();
-        Authority defaultrole = new Authority("ROLE_USER");
-        authorities.add(defaultrole);
-        user.setAuthorities(authorities);
+        String email=user.getEmail();
+
+        String password=user.getPassword();
+        user.setPassword(bCryptPasswordEncoder.encode(password));
+
+        if(user.getCreatedBy().equals("admin"))
+        {
+            EmailDetails emailDetails=new EmailDetails(email,"email : "+email+" | password : "+password,"yoour account info");
+            emailService.sendSimpleMail(emailDetails);
+        }
         User newUser = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }

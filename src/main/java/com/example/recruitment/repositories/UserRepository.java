@@ -19,4 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     public String[] findAllUsername();
     @Query("select user.email FROM User user")
     public String[] findAllEmail();
+
+
+    boolean existsByUsername(String username);
 }

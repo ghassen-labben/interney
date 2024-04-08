@@ -1,19 +1,23 @@
 package com.example.recruitment.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-public class Experience {
+public class Experience implements Serializable {
+    private static final long serialVersionUID = 9178661439383356177L;
+
     private String company;
     private String jobTitle;
     private String description;
@@ -30,7 +34,7 @@ public class Experience {
         this.startDate = startDate;
         this.endDate = endDate;
     }
-    @JsonBackReference
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")
     private Profile profile;

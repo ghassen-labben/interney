@@ -8,15 +8,19 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.*;
 
 @Entity
 @Getter
 @Setter
-public class Profile {
+public class Profile implements Serializable {
+    private static final long serialVersionUID = 9178661439383356177L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,26 +31,31 @@ public class Profile {
         this.educations = new ArrayList<>();
         this.cv = new Attachment();
         this.profileImage=new Attachment();
-        this.skills = new ArrayList<>();
+        this.skills = new HashSet<>();
         this.contact=new Contact();
     }
 
     @JsonManagedReference
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = true,unique = true)
     @JsonIgnoreProperties({"password", "accountExpired","accountLocked","credentialsExpired","enabled","id","accountNonExpired","accountNonLocked","credentialsNonExpired"})
     private User user;
-    @JsonManagedReference
+
+
+
+
     @OneToMany(mappedBy = "profile",cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Experience> experiences = new ArrayList<>();
 
     @JsonManagedReference
-     @OneToMany( mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Education> educations = new ArrayList<>();
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "contact_id", nullable = true)
     private Contact contact;
+
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn( name = "profile_image_id", nullable = true)
     private Attachment profileImage;
@@ -60,7 +69,7 @@ public class Profile {
             joinColumns = @JoinColumn(name = "profile_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private List<Skill> skills = new ArrayList<>();
+    private Set<Skill> skills = new HashSet<>();
 
     public void addExperience(Experience experience) {
         experiences.add(experience);
@@ -86,8 +95,8 @@ public class Profile {
         skills.add(skill);
     }
 
-    public void removeSkill(Skill skill) {
-        skills.remove(skill);
+    public void removeSkill(String skillName) {
+        skills.removeIf(skill -> skill.getName().equals(skillName));
     }
 
     // Add methods for managing attachments

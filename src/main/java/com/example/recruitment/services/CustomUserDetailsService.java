@@ -1,5 +1,6 @@
 package com.example.recruitment.services;
 
+import com.example.recruitment.config.Utils;
 import com.example.recruitment.models.Authority;
 import com.example.recruitment.models.User;
 import com.example.recruitment.repositories.UserRepository;
@@ -10,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,6 +22,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 @Autowired
 private UserRepository userRepository;
+    @Autowired
+    private Utils jwtTokenUtil;
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user=null;
@@ -46,17 +51,19 @@ private UserRepository userRepository;
 
         throw new UsernameNotFoundException("User not found with username: " + username);
     }
+
+    public User getUser(HttpServletRequest request)
+    {
+        String username=jwtTokenUtil.extractUsername(request.getHeader("Authorization").split(" ")[1]);
+        User user=userRepository.findByUsername(username);
+        return user;
+    }
     public boolean isEmail(String inputString) {
-        // Regular expression pattern for matching an email address
         String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-        // Use Pattern class to compile the regex pattern
         Pattern pattern = Pattern.compile(emailPattern);
 
-        // Use Matcher class to match the input string with the pattern
         Matcher matcher = pattern.matcher(inputString);
-
-        // Return true if the input string matches the pattern
         return matcher.matches();
     }
 }

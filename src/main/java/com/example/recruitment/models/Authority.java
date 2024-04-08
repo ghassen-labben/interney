@@ -24,7 +24,8 @@ import java.util.Objects;
 @Getter
 @AllArgsConstructor
 @Setter
-public class Authority implements GrantedAuthority  {
+public class Authority implements GrantedAuthority ,Serializable {
+
 
     @NotNull
     @Id

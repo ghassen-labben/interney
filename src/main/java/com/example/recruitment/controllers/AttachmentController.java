@@ -43,11 +43,9 @@ public class AttachmentController {
                         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + attachment.getFileName() + "\"")
                         .body(resource);
             } else {
-                // Handle the case where the file is not found
                 return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
-            // Handle exception (e.g., log error, return appropriate response)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

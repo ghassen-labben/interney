@@ -42,6 +42,9 @@ public class ProfileService {
     public Optional<Profile> getProfileById(Long id) {
         return profileRepository.findById(id);
     }
+    public Optional<Profile> getProfileByUser(User user) {
+        return Optional.ofNullable(profileRepository.findProfileByUser(user));
+    }
 
     public Profile addExperience(Profile profile, Experience experience) {
         experience.setProfile(profile);
@@ -62,10 +65,7 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
 
-    public Profile removeSkill(Profile profile, Skill skill) {
-        profile.removeSkill(skill);
-        return profileRepository.save(profile);
-    }
+
 
     public Profile addAttachment(Profile profile, Attachment attachment) {
         attachment=attachmentRepository.save(attachment);
@@ -90,10 +90,7 @@ public class ProfileService {
         {
             if(oldContact.equals(contact))
                 return profileRepository.save(profile);
-            if(contact.getPays()!=null && !contact.getPays().equals(oldContact.getPays()))
-            {
-                oldContact.setPays(contact.getPays());
-            }
+
             if(contact.getRue()!=null && !contact.getRue().equals(oldContact.getRue()) )
             {
                 oldContact.setRue(contact.getRue());

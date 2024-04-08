@@ -2,10 +2,13 @@ package com.example.recruitment.controllers;
 
 import com.example.recruitment.models.Department;
 import com.example.recruitment.models.Internship;
+import com.example.recruitment.models.User;
+import com.example.recruitment.repositories.UserRepository;
 import com.example.recruitment.services.DepartmentService;
 import com.example.recruitment.services.InternshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.parameters.P;
@@ -16,15 +19,16 @@ import java.util.Optional;
 
 // InternshipController.java
 @RestController
-@RequestMapping("/api/internships")
+@RequestMapping(value="/api/internships" )
 @CrossOrigin("http://localhost:4200/")
 public class InternshipController {
 
     private final InternshipService internshipService;
+
     private final DepartmentService departmentService;
 
     @Autowired
-    public InternshipController(InternshipService internshipService,DepartmentService departmentService) {
+    public InternshipController(InternshipService internshipService,DepartmentService departmentService,UserRepository userRepository) {
         this.internshipService = internshipService;
         this.departmentService=departmentService;
     }
@@ -40,22 +44,19 @@ public class InternshipController {
         return internship.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
-    @PostMapping("/{departmentId}")
-    public ResponseEntity<Internship> saveInternship(@RequestBody Internship internship, @PathVariable Long departmentId) {
-        System.out.println(departmentId);
-
+    @PostMapping
+    public ResponseEntity<Internship> saveInternship(@RequestBody Internship internship) {
         try {
-            Optional<Department> department=this.departmentService.getDepartmentById(departmentId);
-            if(department.isPresent())
-                internship.setDepartment(department.get());
+
             Internship savedInternship = internshipService.saveInternship(internship);
-
-
             return new ResponseEntity<>(savedInternship, HttpStatus.CREATED);
         } catch (Exception e) {
+            // If an exception occurs during the process, return HTTP status BAD_REQUEST
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
+
+
 
     @PutMapping("/{id}")
     public ResponseEntity<Internship> updateInternship(@PathVariable Long id, @RequestBody Internship internship) {
@@ -78,6 +79,7 @@ public class InternshipController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInternship(@PathVariable Long id) {

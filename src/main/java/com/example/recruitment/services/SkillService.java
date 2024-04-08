@@ -24,6 +24,14 @@ public class SkillService {
     public Optional<Skill> getSkillByName(String name) {
         return skillRepository.findById(name);
     }
+    public Boolean existByName(String name)
+    {
+        return skillRepository.existsById(name);
+    }
+    public void deleteSkill(String name)
+    {
+         skillRepository.deleteById(name);
+    }
 
     // Additional methods can be added based on requirements
 
