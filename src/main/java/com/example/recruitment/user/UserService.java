@@ -1,7 +1,10 @@
-package com.alibou.websocket.user;
+package com.example.recruitment.user;
 
 
+import com.example.recruitment.models.User;
+import com.example.recruitment.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,22 +13,24 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
-    private final UserRepository repository;
+    @Autowired
+    private UserRepository repository;
 
     public void saveUser(User user) {
-        user.setStatus(Status.ONLINE);
-        repository.save(user);
+        User user1=repository.findByUsername(user.getUsername());
+        user1.setStatus(Boolean.TRUE);
+        repository.save(user1);
     }
 
     public void disconnect(User user) {
-        var storedUser = repository.findById(user.getNickName()).orElse(null);
+        var storedUser = repository.findByUsername(user.getUsername());
         if (storedUser != null) {
-            storedUser.setStatus(Status.OFFLINE);
+            storedUser.setStatus(Boolean.FALSE);
             repository.save(storedUser);
         }
     }
 
     public List<User> findConnectedUsers() {
-        return repository.findAllByStatus(Status.ONLINE);
+        return repository.findAllByStatus(Boolean.TRUE);
     }
 }

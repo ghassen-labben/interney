@@ -1,9 +1,12 @@
-package com.alibou.websocket.chat;
+package com.example.recruitment.chat;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Set;
 
-public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
-    List<ChatMessage> findByChatId(String chatId);
+public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+
+    List<ChatMessage> findChatMessagesBySenderUsernameAndRecipientUsernameOrderByTimestamp(String senderId,String RecipientId);
 }

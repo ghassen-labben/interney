@@ -17,7 +17,6 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/attachment")
-@CrossOrigin("http://localhost:4200")
 public class AttachmentController {
 
     @Autowired

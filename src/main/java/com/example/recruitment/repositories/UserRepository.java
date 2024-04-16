@@ -6,8 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findAllByStatus(Boolean status);
+
 
     @Query("SELECT DISTINCT user FROM User user " +
             "INNER JOIN FETCH user.authorities AS authorities " +

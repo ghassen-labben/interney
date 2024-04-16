@@ -1,5 +1,6 @@
 package com.example.recruitment.controllers;
 
+import com.example.recruitment.config.Utils;
 import com.example.recruitment.models.Authority;
 import com.example.recruitment.models.EmailDetails;
 import com.example.recruitment.models.Skill;
@@ -8,19 +9,26 @@ import com.example.recruitment.repositories.AuthorityRepository;
 import com.example.recruitment.repositories.UserRepository;
 import com.example.recruitment.services.EmailService;
 import com.example.recruitment.services.SkillService;
+import com.example.recruitment.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin("http://localhost:4200")
 public class UserController {
+    @Autowired
+    private  UserService userService;
 
     @Autowired
     private UserRepository userRepository;
@@ -28,11 +36,15 @@ public class UserController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private Utils jwtTokenUtil;
 
+    @Autowired
+    private AttachmentController attachmentController;
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userRepository.findAll();
+        List<User> users = userService.findConnectedUsers();
         return ResponseEntity.ok(users);
     }
 
@@ -53,6 +65,31 @@ public class UserController {
 
         return ResponseEntity.ok(employers);
     }
+
+    @MessageMapping("/user.addUser")
+    @SendTo("/user/public")
+    public User addUser(
+            @Payload User user
+    ) {
+user.setStatus(true);
+        userService.saveUser(user);
+        return user;
+    }
+
+    @MessageMapping("/user.disconnectUser")
+    @SendTo("/user/public")
+    public User disconnectUser(
+            @Payload User user
+    ) {
+        user.setStatus(false);
+        userService.disconnect(user);
+        return user;
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> findConnectedUsers() {
+        return ResponseEntity.ok(userService.findConnectedUsers());
+    }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userRepository.findById(id).orElse(null);
@@ -60,6 +97,13 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(user);
+    }
+    @GetMapping("/currentUser")
+    public ResponseEntity<User> currentUser(HttpServletRequest request)
+    {
+        String username=jwtTokenUtil.extractUsername(request.getHeader("Authorization").split(" ")[1]);
+        User user=userRepository.findByUsername(username);
+        return  ResponseEntity.ok(user);
     }
     @GetMapping("/usernames")
     public ResponseEntity<String[]> getUsenames()
@@ -88,7 +132,15 @@ public class UserController {
         User newUser = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
+    @GetMapping("/{userId}/profileImage")
+    public  ResponseEntity<Resource> getProfilePicture(@PathVariable Long userId)
+    {
+        Optional<User> user=userRepository.findById(userId);
+        if(user.isEmpty())
+            return null;
+      return this.attachmentController.downloadAttachment(user.get().getProfile().getProfileImage().getId());
 
+    }
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
         if (!userRepository.existsById(id)) {

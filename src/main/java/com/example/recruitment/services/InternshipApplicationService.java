@@ -53,4 +53,6 @@ public class InternshipApplicationService {
     public boolean hasUserAppliedForInternship(Long internshipId, User user) {
         return internshipApplicationRepository.existsByInternshipIdAndCandidate(internshipId, user);
     }
+
+
 }

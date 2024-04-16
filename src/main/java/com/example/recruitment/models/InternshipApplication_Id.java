@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Embeddable
 @AllArgsConstructor
@@ -18,5 +19,21 @@ public class InternshipApplication_Id implements Serializable {
     @Column(name = "candidate_id")
     private Long candidateId;
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(candidateId, internshipId);
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+        InternshipApplication_Id other = (InternshipApplication_Id) obj;
+        return Objects.equals(this.candidateId, other.candidateId) &&
+                Objects.equals(this.internshipId, other.internshipId);
+    }
 }

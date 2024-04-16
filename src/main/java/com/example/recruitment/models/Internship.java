@@ -12,10 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Timestamp; // Correct import
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Getter
@@ -39,19 +36,10 @@ public class Internship implements Serializable {
             joinColumns = @JoinColumn(name = "internship_id"),
             inverseJoinColumns = @JoinColumn(name = "skill_id")
     )
-    private List<Skill> skills = new ArrayList<>();
-
-
-
+    private Set<Skill> skills = new HashSet<>();
     private Date deadline;
     private Date startDate;
     private Date endDate;
-
-
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "department_id")
-    private Department department;
-
     @JsonBackReference
     @OneToMany(mappedBy = "internship")
     Set<InternshipApplication> internshipApplications;
@@ -70,14 +58,13 @@ public class Internship implements Serializable {
         skills.add(skill);
     }
 
-    public Internship(String title, String description, List<Skill> skills, Date deadline, Date startDate, Date endDate, Department department, Timestamp regdate, Timestamp updatedate) {
+    public Internship(String title, String description, HashSet<Skill> skills, Date deadline, Date startDate, Date endDate,Timestamp regdate, Timestamp updatedate) {
         this.title = title;
         this.description = description;
         this.skills = skills;
         this.deadline = deadline;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.department = department;
         this.regdate = regdate;
         this.updatedate = updatedate;
     }

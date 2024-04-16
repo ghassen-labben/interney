@@ -1,17 +1,12 @@
 package com.example.recruitment.controllers;
 
-import com.example.recruitment.models.Department;
-import com.example.recruitment.models.Internship;
-import com.example.recruitment.models.User;
+import com.example.recruitment.models.*;
+import com.example.recruitment.repositories.SkillRepository;
 import com.example.recruitment.repositories.UserRepository;
-import com.example.recruitment.services.DepartmentService;
 import com.example.recruitment.services.InternshipService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,24 +15,40 @@ import java.util.Optional;
 // InternshipController.java
 @RestController
 @RequestMapping(value="/api/internships" )
-@CrossOrigin("http://localhost:4200/")
 public class InternshipController {
 
     private final InternshipService internshipService;
 
-    private final DepartmentService departmentService;
+
+
 
     @Autowired
-    public InternshipController(InternshipService internshipService,DepartmentService departmentService,UserRepository userRepository) {
+    public InternshipController(InternshipService internshipService) {
         this.internshipService = internshipService;
-        this.departmentService=departmentService;
+    }
+    @GetMapping
+    public ResponseEntity<PagedResponse<Internship>> getAllInternships(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) List<String> skills,
+            @RequestParam(required = false) String searchQuery) {
+        PagedResponse<Internship> response;
+
+
+        if (skills != null && !skills.isEmpty() && searchQuery != null && !searchQuery.isEmpty()) {
+            response = internshipService.getInternshipsBySkillsAndQuery(page, size, skills, searchQuery);
+        } else if (skills != null && !skills.isEmpty()) {
+            response = internshipService.getInternshipsBySkills(page, size, skills);
+        } else if (searchQuery != null && !searchQuery.isEmpty()) {
+            response = internshipService.getInternshipsByQuery(page, size, searchQuery);
+        } else {
+            response = internshipService.getInternshipsByPage(page, size);
+        }
+        return ResponseEntity.ok(response);
     }
 
-    @GetMapping
-    public ResponseEntity<List<Internship>> getAllInternships() {
-        List<Internship> internships = internshipService.getAllInternships();
-        return new ResponseEntity<>(internships, HttpStatus.OK);
-    }
+
+
     @GetMapping("/{id}")
     public ResponseEntity<Internship> getInternshipById(@PathVariable Long id) {
         Optional<Internship> internship = internshipService.getInternshipById(id);
@@ -51,7 +62,6 @@ public class InternshipController {
             Internship savedInternship = internshipService.saveInternship(internship);
             return new ResponseEntity<>(savedInternship, HttpStatus.CREATED);
         } catch (Exception e) {
-            // If an exception occurs during the process, return HTTP status BAD_REQUEST
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -69,18 +79,14 @@ public class InternshipController {
     }
 
 
-    @GetMapping("/department/{departmentId}")
-    public ResponseEntity<List<Internship>> getInternshipByDepartment(@PathVariable Long departmentId) {
-        Optional<Department> department = departmentService.getDepartmentById(departmentId);
-        if (department.isPresent()) {
-            List<Internship> internshipList = internshipService.getInternshipsByDepartment(department.get());
-            return new ResponseEntity<>(internshipList, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+
+
+
+    @GetMapping("/top10")
+    public List<Internship> getTop10()
+    {
+        return internshipService.getTop10();
     }
-
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInternship(@PathVariable Long id) {
         internshipService.deleteInternship(id);

@@ -2,6 +2,7 @@ package com.example.recruitment.config;
 
 import com.example.recruitment.services.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +14,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -27,10 +30,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf().disable()
-                .cors().and()
+                .cors().configurationSource(corsConfigurationSource()).and()
                 .httpBasic().and()
                 .authorizeRequests()
                 .antMatchers("/authenticate").permitAll()
+                .antMatchers("/app/**").permitAll()
+                .antMatchers("/ws").permitAll()
+
+                .antMatchers("/chat").permitAll()
+                .antMatchers("/messages/**").permitAll()
+
                 .antMatchers(HttpMethod.GET,"/api/skills").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/users/usernames").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
@@ -70,5 +79,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("http://localhost:4200"); // or "**" for allowing all origins
+        configuration.addAllowedMethod("*"); // or specific methods like "GET", "POST", etc.
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

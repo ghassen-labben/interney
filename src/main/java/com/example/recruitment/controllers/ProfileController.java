@@ -24,7 +24,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/profiles")
-@CrossOrigin("http://localhost:4200")
 public class ProfileController {
     @Autowired
     private Utils jwtTokenUtil;

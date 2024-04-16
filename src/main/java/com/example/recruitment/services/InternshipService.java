@@ -6,12 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class InternshipService {
@@ -24,11 +22,6 @@ public class InternshipService {
         this.internshipRepository = internshipRepository;
         this.skillService=skillService;
     }
-
-    public List<Internship> getInternshipsByDepartment(Department department) {
-        return internshipRepository.findInternshipsByDepartment(department);
-    }
-
     public List<Internship> getAllInternships() {
         return internshipRepository.findAll();
     }
@@ -53,7 +46,7 @@ public class InternshipService {
     }
 
     public Internship saveInternship(Internship internship) {
-        List<Skill> skills=new ArrayList<>();
+        Set<Skill> skills=new HashSet<>();
         for (Skill skill:internship.getSkills())
         {
             if(skillService.existByName(skill.getName()))
@@ -73,7 +66,7 @@ public class InternshipService {
         for(Skill s:skills)
             System.out.println(s.getName());
 
-        skillService.saveAll(skills);
+        skillService.saveAll((List<Skill>) skills);
 
         internship.setSkills(skills);
         return internshipRepository.save(internship);
@@ -88,7 +81,6 @@ public class InternshipService {
 
         if (internshipOptional.isPresent()) {
             Internship internship = internshipOptional.get();
-            internship.setDepartment(updatedInternship.getDepartment());
             internship.setSkills(updatedInternship.getSkills());
             internship.setEndDate(updatedInternship.getEndDate());
             internship.setStartDate(updatedInternship.getStartDate());
@@ -100,7 +92,29 @@ public class InternshipService {
             return null;
         }
     }
+    public PagedResponse<Internship> getInternshipsBySkills(int page, int size, List<String> skills) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findBySkillsNameIn(skills, pageable);
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1,
+                internships.getSize(), internships.getTotalElements(), internships.getTotalPages(),
+                internships.isLast());
+    }
 
+    public PagedResponse<Internship> getInternshipsByQuery(int page, int size, String searchQuery) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findByTitleContainingIgnoreCase(searchQuery, pageable);
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1,
+                internships.getSize(), internships.getTotalElements(), internships.getTotalPages(),
+                internships.isLast());
+    }
+
+    public PagedResponse<Internship> getInternshipsBySkillsAndQuery(int page, int size, List<String> skills, String searchQuery) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findBySkillsNameInAndTitleContainingIgnoreCase(skills, searchQuery, pageable);
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1,
+                internships.getSize(), internships.getTotalElements(), internships.getTotalPages(),
+                internships.isLast());
+    }
     public void deleteInternship(Long id) {
         internshipRepository.deleteById(id);
     }
@@ -112,4 +126,6 @@ public class InternshipService {
            return internshipList.subList(0,10);
         return internshipList;
     }
+
+
 }

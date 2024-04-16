@@ -18,7 +18,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/internship-applications")
-@CrossOrigin("http://localhost:4200")
 public class InternshipApplicationController {
 
     private final InternshipApplicationService internshipApplicationService;

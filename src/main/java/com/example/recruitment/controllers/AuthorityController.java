@@ -14,7 +14,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/authorities")
-@CrossOrigin("http://localhost:4200")
 public class AuthorityController {
 
     private final AuthorityRepository authorityRepository;

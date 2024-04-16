@@ -12,7 +12,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/skills")
-@CrossOrigin("http://localhost:4200")
 public class SkillController {
     private final SkillService skillService;
 

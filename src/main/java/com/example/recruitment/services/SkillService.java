@@ -32,7 +32,9 @@ public class SkillService {
     {
          skillRepository.deleteById(name);
     }
-
-    // Additional methods can be added based on requirements
+    public void saveAll(List<Skill> skillList)
+    {
+        skillRepository.saveAll(skillList);
+    }
 
 }

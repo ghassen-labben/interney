@@ -2,7 +2,6 @@ package com.example.recruitment.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -39,6 +38,9 @@ public class User implements UserDetails, Serializable {
 
     @Column(name = "EMAIL",nullable = false,unique = true)
     private String email;
+
+    private Boolean status;
+
 
     @JsonIgnore
     @Column(name = "ACCOUNT_EXPIRED")
