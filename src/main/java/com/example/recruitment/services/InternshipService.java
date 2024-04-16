@@ -1,14 +1,15 @@
 package com.example.recruitment.services;
 
-import com.example.recruitment.models.Department;
-import com.example.recruitment.models.Internship;
-import com.example.recruitment.models.Profile;
-import com.example.recruitment.models.Skill;
+import com.example.recruitment.models.*;
 import com.example.recruitment.repositories.InternshipRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,6 +36,21 @@ public class InternshipService {
     public Optional<Internship> getInternshipById(Long id) {
         return internshipRepository.findById(id);
     }
+    public PagedResponse<Internship> getInternshipsByPage(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<Internship> internshipPage = internshipRepository.findAllByOrderByRegdateDesc(pageable);
+
+        List<Internship> internships = new ArrayList<>(internshipPage.getContent());
+
+        return new PagedResponse<>(
+                internships,
+                internshipPage.getNumber() + 1,
+                internshipPage.getSize(),
+                internshipPage.getTotalElements(),
+                internshipPage.getTotalPages(),
+                internshipPage.isLast()
+        );
+    }
 
     public Internship saveInternship(Internship internship) {
         List<Skill> skills=new ArrayList<>();
@@ -54,6 +70,11 @@ public class InternshipService {
 
 
         }
+        for(Skill s:skills)
+            System.out.println(s.getName());
+
+        skillService.saveAll(skills);
+
         internship.setSkills(skills);
         return internshipRepository.save(internship);
     }
@@ -82,5 +103,13 @@ public class InternshipService {
 
     public void deleteInternship(Long id) {
         internshipRepository.deleteById(id);
+    }
+
+    public List<Internship> getTop10() {
+
+       List<Internship> internshipList =internshipRepository.findTopInternshipByNumberOfApplicants();
+       if(internshipList.size()>10)
+           return internshipList.subList(0,10);
+        return internshipList;
     }
 }
