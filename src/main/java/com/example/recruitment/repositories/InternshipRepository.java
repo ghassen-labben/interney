@@ -23,4 +23,17 @@ public interface InternshipRepository extends JpaRepository<Internship,Long> {
     Page<Internship> findByTitleContainingIgnoreCase(String searchQuery, Pageable pageable);
 
     Page<Internship> findBySkillsNameInAndTitleContainingIgnoreCase(List<String> skills, String searchQuery, Pageable pageable);
+
+    Page<Internship> findByDepartmentNameAndTitleContainingIgnoreCase(String departmentName, String searchQuery, Pageable pageable);
+
+    Page<Internship> findByDepartmentName(String departmentName, Pageable pageable);
+
+    @Query("SELECT i FROM Internship i JOIN i.internshipApplications a GROUP BY i HAVING COUNT(a) > 0")
+    Page<Internship> findAllWithApplicants(Pageable pageable);
+
+
+
+    Page<Internship> findBySkillsNameInAndDepartmentNameAndTitleContainingIgnoreCase(List<String> skills, String departmentId, String searchQuery, Pageable pageable);
+
+    Page<Internship> findBySkillsNameInAndDepartmentName(List<String> skills, String departmentId, Pageable pageable);
 }

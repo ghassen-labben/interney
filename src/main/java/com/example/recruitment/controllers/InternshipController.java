@@ -26,28 +26,65 @@ public class InternshipController {
     public InternshipController(InternshipService internshipService) {
         this.internshipService = internshipService;
     }
+
+
+    @GetMapping("/all")
+    public List<Internship> getAll()
+    {
+        return  this.internshipService.getAllInternships();
+    }
     @GetMapping
     public ResponseEntity<PagedResponse<Internship>> getAllInternships(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) List<String> skills,
-            @RequestParam(required = false) String searchQuery) {
+            @RequestParam(required = false) String searchQuery,
+            @RequestParam(required = false) String department) {
         PagedResponse<Internship> response;
 
-
-        if (skills != null && !skills.isEmpty() && searchQuery != null && !searchQuery.isEmpty()) {
+        if (skills != null && !skills.isEmpty() && searchQuery != null && !searchQuery.isEmpty() && department != null && !department.isEmpty()) {
+            response = internshipService.getInternshipsBySkillsQueryAndDepartment(page, size, skills, searchQuery, department);
+        } else if (skills != null && !skills.isEmpty() && department != null && !department.isEmpty()) {
+            response = internshipService.getInternshipsBySkillsAndDepartment(page, size, skills, department);
+        } else if (searchQuery != null && !searchQuery.isEmpty() && department != null && !department.isEmpty()) {
+            response = internshipService.getInternshipsByQueryAndDepartment(page, size, searchQuery, department);
+        } else if (skills != null && !skills.isEmpty() && searchQuery != null && !searchQuery.isEmpty()) {
             response = internshipService.getInternshipsBySkillsAndQuery(page, size, skills, searchQuery);
         } else if (skills != null && !skills.isEmpty()) {
             response = internshipService.getInternshipsBySkills(page, size, skills);
         } else if (searchQuery != null && !searchQuery.isEmpty()) {
             response = internshipService.getInternshipsByQuery(page, size, searchQuery);
+        } else if (department != null && !department.isEmpty()) {
+            response = internshipService.getInternshipsByDepartment(page, size, department);
         } else {
             response = internshipService.getInternshipsByPage(page, size);
         }
+
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/hasApplicants")
+    public ResponseEntity<PagedResponse<Internship>> getAllInternshipsWithApplicants(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        PagedResponse<Internship> response;
+
+
+        response = internshipService.getInternshipsWithApplicant(page, size);
+
         return ResponseEntity.ok(response);
     }
 
 
+
+    @GetMapping("/department/{departmentId}")
+    public ResponseEntity<PagedResponse<Internship>> getInternshipsByDepartment(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String searchQuery, @PathVariable String departmentId){
+        PagedResponse<Internship> response;
+        response = internshipService.getInternshipsByDeparmtentAndSearch(page, size,departmentId,searchQuery);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Internship> getInternshipById(@PathVariable Long id) {
@@ -58,7 +95,7 @@ public class InternshipController {
     @PostMapping
     public ResponseEntity<Internship> saveInternship(@RequestBody Internship internship) {
         try {
-
+System.out.println(internship);
             Internship savedInternship = internshipService.saveInternship(internship);
             return new ResponseEntity<>(savedInternship, HttpStatus.CREATED);
         } catch (Exception e) {

@@ -16,11 +16,13 @@ public class InternshipService {
 
     private final InternshipRepository internshipRepository;
     private final SkillService skillService;
+    private final DepartmentService departmentService;
 
     @Autowired
-    public InternshipService(InternshipRepository internshipRepository,SkillService skillService) {
+    public InternshipService(InternshipRepository internshipRepository,SkillService skillService, DepartmentService departmentService) {
         this.internshipRepository = internshipRepository;
         this.skillService=skillService;
+        this.departmentService=departmentService;
     }
     public List<Internship> getAllInternships() {
         return internshipRepository.findAll();
@@ -46,30 +48,42 @@ public class InternshipService {
     }
 
     public Internship saveInternship(Internship internship) {
-        Set<Skill> skills=new HashSet<>();
-        for (Skill skill:internship.getSkills())
-        {
-            if(skillService.existByName(skill.getName()))
-            {
-                Optional<Skill> skillToAdd=skillService.getSkillByName(skill.getName());
-                if(skillToAdd.isPresent())
-                    skills.add(skillToAdd.get());
+        try {
+
+            Set<Skill> skills = new HashSet<>();
+            for (Skill skill : internship.getSkills()) {
+                if (skillService.existByName(skill.getName())) {
+                    Optional<Skill> skillToAdd = skillService.getSkillByName(skill.getName());
+                    if (skillToAdd.isPresent()) {
+                        skills.add(skillToAdd.get());
+                    } else {
+                        System.out.println("Skill not found: " + skill.getName());
+                    }
+                } else {
+                    skill.setName(skill.getName().toUpperCase());
+                    skills.add(skill);
+                }
             }
-            else {
-                skill.setName(skill.getName().toUpperCase());
-            skills.add(skill);
+
+            Department department = departmentService.getDepartmentById(internship.getDepartment().getName());
+            if (department == null) {
+                System.out.println("Department not found: " + internship.getDepartment().getName());
             }
 
+            department.addInternship(internship);
+            departmentService.saveDepartment(department);
+            List<Skill> skillsList = new ArrayList<>(skills);
 
+            skillService.saveAll(skillsList);
+            internship.setSkills(skills);
 
+            Internship savedInternship = internshipRepository.save(internship);
+            System.out.println("Saved internship: " + savedInternship);
+            return savedInternship;
+        } catch (Exception e) {
+            System.out.println("Error saving internship: " + e.getMessage());
+            return null;
         }
-        for(Skill s:skills)
-            System.out.println(s.getName());
-
-        skillService.saveAll((List<Skill>) skills);
-
-        internship.setSkills(skills);
-        return internshipRepository.save(internship);
     }
     public Internship addSkill(Internship internship, Skill skill) {
         skill.setName(skill.getName().toUpperCase());
@@ -78,7 +92,7 @@ public class InternshipService {
     }
     public Internship updateInternship(Long id, Internship updatedInternship) {
         Optional<Internship> internshipOptional = internshipRepository.findById(id);
-
+System.out.println(updatedInternship.getDescription());
         if (internshipOptional.isPresent()) {
             Internship internship = internshipOptional.get();
             internship.setSkills(updatedInternship.getSkills());
@@ -128,4 +142,57 @@ public class InternshipService {
     }
 
 
+    public PagedResponse<Internship> getInternshipsByDeparmtentAndSearch(int page, int size, String departmentId,String searchQuery) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships;
+        if(searchQuery!=null)
+            internships   = internshipRepository.findByDepartmentNameAndTitleContainingIgnoreCase(departmentId,searchQuery,pageable);
+        else
+            internships = internshipRepository.findByDepartmentName(departmentId,pageable);
+
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1,
+                internships.getSize(), internships.getTotalElements(), internships.getTotalPages(),
+                internships.isLast());
+    }
+
+
+    public PagedResponse<Internship> getInternshipsWithApplicant(int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships;
+        internships = internshipRepository.findAllWithApplicants(pageable);
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1,
+                internships.getSize(), internships.getTotalElements(), internships.getTotalPages(),
+                internships.isLast());
+    }
+
+    public PagedResponse<Internship> getInternshipsBySkillsQueryAndDepartment(int page, int size, List<String> skills, String searchQuery, String departmentId) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships;
+
+        if (searchQuery != null) {
+            internships = internshipRepository.findBySkillsNameInAndDepartmentNameAndTitleContainingIgnoreCase(skills, departmentId, searchQuery, pageable);
+        } else {
+            internships = internshipRepository.findBySkillsNameInAndDepartmentName(skills, departmentId, pageable);
+        }
+
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1, internships.getSize(), internships.getTotalElements(), internships.getTotalPages(), internships.isLast());
+    }
+    public PagedResponse<Internship> getInternshipsBySkillsAndDepartment(int page, int size, List<String> skills, String departmentId) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findBySkillsNameInAndDepartmentName(skills, departmentId, pageable);
+
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1, internships.getSize(), internships.getTotalElements(), internships.getTotalPages(), internships.isLast());
+    }
+    public PagedResponse<Internship> getInternshipsByQueryAndDepartment(int page, int size, String searchQuery, String departmentId) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findByDepartmentNameAndTitleContainingIgnoreCase(departmentId, searchQuery, pageable);
+
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1, internships.getSize(), internships.getTotalElements(), internships.getTotalPages(), internships.isLast());
+    }
+    public PagedResponse<Internship> getInternshipsByDepartment(int page, int size, String departmentId) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.Direction.DESC, "regdate");
+        Page<Internship> internships = internshipRepository.findByDepartmentName(departmentId, pageable);
+
+        return new PagedResponse<>(internships.getContent(), internships.getNumber() + 1, internships.getSize(), internships.getTotalElements(), internships.getTotalPages(), internships.isLast());
+    }
 }

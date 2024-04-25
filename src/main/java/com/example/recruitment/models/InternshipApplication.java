@@ -1,15 +1,12 @@
 package com.example.recruitment.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.*;
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
 
@@ -18,6 +15,7 @@ import java.sql.Timestamp;
 @Setter
 @NoArgsConstructor
 public class InternshipApplication implements Serializable {
+    @Serial
     private static final long serialVersionUID = 9178661439383356177L;
 
     @EmbeddedId
@@ -29,10 +27,15 @@ public class InternshipApplication implements Serializable {
     User candidate;
 
 
-    @ManyToOne()
+    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.EAGER)
     @MapsId("internshipId")
     @JoinColumn(name = "internship_id")
     Internship internship;
+
+    @ManyToOne
+    @JoinColumn(name = "encadrant_id")
+    private User encadrant;
+
 
     public InternshipApplication(InternshipApplication_Id id, User candidate, Internship internship) {
         this.id = id;
@@ -43,6 +46,23 @@ public class InternshipApplication implements Serializable {
     @CreationTimestamp
     private Timestamp applyDate;
 
-    @Column(name = "isAccepted",nullable = true)
-    private Boolean isAccepted=null;
+
+    @Column(name = "hrAccepted", nullable = true)
+    private Boolean hrAccepted = null;
+
+    @Column(name = "encadrantAccepted", nullable = true)
+    private Boolean encadrantAccepted = null;
+
+    public void hrAccept() {
+        this.hrAccepted = true;
+    }
+
+    public void encadrantAccept() {
+        this.encadrantAccepted = true;
+    }
+
+    public boolean isFullyAccepted() {
+        return hrAccepted != null && encadrantAccepted != null && hrAccepted && encadrantAccepted;
+    }
+
 }

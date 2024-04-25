@@ -36,10 +36,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/authenticate").permitAll()
                 .antMatchers("/app/**").permitAll()
                 .antMatchers("/ws").permitAll()
-
                 .antMatchers("/chat").permitAll()
                 .antMatchers("/messages/**").permitAll()
-
                 .antMatchers(HttpMethod.GET,"/api/skills").permitAll()
                 .antMatchers(HttpMethod.GET,"/api/users/usernames").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/users").permitAll()
@@ -48,15 +46,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.DELETE,"/api/users/").hasAuthority("ROLE_ADMIN")
                 .antMatchers("/api/attachment/download").hasAuthority("ROLE_USER")
                 .antMatchers("/api/profiles").hasAuthority("ROLE_USER")
-
-                .antMatchers("/api/internship-applications").hasAuthority("ROLE_USER")
+                .antMatchers("/api/internship-applications").hasAnyAuthority("ROLE_USER","ROLE_RH","ROLE_ENCADRANT")
+                .antMatchers(HttpMethod.POST,"/api/internship-applications").hasAuthority("ROLE_USER")
                 .antMatchers(HttpMethod.GET,"/api/departments").permitAll()
                 .antMatchers(HttpMethod.POST,"/api/departments").hasAuthority("ROLE_ADMIN")
                 .antMatchers(HttpMethod.DELETE, "/api/departments/**").hasAuthority("ROLE_ADMIN")
                 .antMatchers(HttpMethod.PUT, "/api/departments/**").hasAuthority("ROLE_ADMIN")
-                .antMatchers(HttpMethod.POST,"/api/internships").hasAuthority("ROLE_ADMIN")
-                .antMatchers(HttpMethod.DELETE, "/api/internships/**").hasAuthority("ROLE_ADMIN")
-                .antMatchers(HttpMethod.PUT, "/api/internships/**").hasAuthority("ROLE_ADMIN")
+                .antMatchers(HttpMethod.POST,"/api/internships").hasAnyAuthority("ROLE_ADMIN","ROLE_RH")
+                .antMatchers(HttpMethod.DELETE, "/api/internships").hasAnyAuthority("ROLE_ADMIN","ROLE_RH")
+                .antMatchers(HttpMethod.PUT, "/api/internships/**").hasAnyAuthority("ROLE_ADMIN","ROLE_RH")
                 .anyRequest().authenticated().and()
                 .exceptionHandling().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
@@ -83,11 +81,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:4200"); // or "**" for allowing all origins
-        configuration.addAllowedMethod("*"); // or specific methods like "GET", "POST", etc.
+        configuration.addAllowedOrigin("http://localhost:4200");
+        configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

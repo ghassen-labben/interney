@@ -1,14 +1,10 @@
 package com.example.recruitment.controllers;
 
 import com.example.recruitment.config.Utils;
-import com.example.recruitment.models.Authority;
-import com.example.recruitment.models.EmailDetails;
-import com.example.recruitment.models.Skill;
-import com.example.recruitment.models.User;
-import com.example.recruitment.repositories.AuthorityRepository;
+import com.example.recruitment.models.*;
 import com.example.recruitment.repositories.UserRepository;
+import com.example.recruitment.services.DepartmentService;
 import com.example.recruitment.services.EmailService;
-import com.example.recruitment.services.SkillService;
 import com.example.recruitment.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -40,11 +36,14 @@ public class UserController {
     private Utils jwtTokenUtil;
 
     @Autowired
+     private     DepartmentService departmentService;
+
+    @Autowired
     private AttachmentController attachmentController;
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.findConnectedUsers();
+    public ResponseEntity<Set<User>> getAllUsers(HttpServletRequest request) {
+        Set<User> users = userService.findConnectedUsers(request);
         return ResponseEntity.ok(users);
     }
 
@@ -86,10 +85,6 @@ user.setStatus(true);
         return user;
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> findConnectedUsers() {
-        return ResponseEntity.ok(userService.findConnectedUsers());
-    }
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         User user = userRepository.findById(id).orElse(null);
@@ -120,16 +115,21 @@ user.setStatus(true);
     public ResponseEntity<User> createUser(@RequestBody User user) {
         BCryptPasswordEncoder bCryptPasswordEncoder=new BCryptPasswordEncoder();
         String email=user.getEmail();
-
         String password=user.getPassword();
         user.setPassword(bCryptPasswordEncoder.encode(password));
+        if(user.getDepartment()!=null && user.getDepartment().getName()!=null)
+        {   Department department=user.getDepartment();
+            department.addEncadrant(user);
+            departmentService.saveDepartment(department);
+        }
+        User newUser = userRepository.save(user);
 
-        if(user.getCreatedBy().equals("admin"))
+        if(user.getCreatedBy()!=null && user.getCreatedBy().equals("admin"))
         {
             EmailDetails emailDetails=new EmailDetails(email,"email : "+email+" | password : "+password,"yoour account info");
             emailService.sendSimpleMail(emailDetails);
         }
-        User newUser = userRepository.save(user);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
     }
     @GetMapping("/{userId}/profileImage")
@@ -161,4 +161,33 @@ user.setStatus(true);
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/encadrants/{departmentId}")
+    public ResponseEntity<Set<User>> getEncadrants(@PathVariable String departmentId) {
+        Department department=departmentService.getDepartmentById(departmentId);
+        Set<User> encadrants=department.getEncadrants();
+
+
+        return ResponseEntity.ok(encadrants);
+    }
+
+    @GetMapping("/encadrant/numberSupervised/{encadrantId}")
+    public ResponseEntity<Object> isEncadrantAvailable(@PathVariable Long encadrantId) {
+        Optional<User> userOptional = userRepository.findById(encadrantId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            if (user.getAuthorities().stream().anyMatch(authority -> authority.getAuthority().equals("ROLE_ENCADRANT"))) {
+                Long supervisedApplicationsCount = user.getApplicationsSupervisees().stream()
+                        .filter(internshipApplication ->internshipApplication.getEncadrantAccepted()==null || internshipApplication.getEncadrantAccepted()==true )
+                        .count();
+                return ResponseEntity.ok(supervisedApplicationsCount);
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("User with id " + encadrantId + " is not an Encadrant");
+            }
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("User with id " + encadrantId + " not found");
+        }
+    }
 }

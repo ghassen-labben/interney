@@ -7,10 +7,10 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    List<User> findAllByStatus(Boolean status);
 
 
     @Query("SELECT DISTINCT user FROM User user " +
@@ -26,4 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 
     boolean existsByUsername(String username);
+
+
+
+    @Query("SELECT u FROM User u JOIN InternshipApplication ia ON ia.encadrant = u AND ia.candidate = :candidate")
+    Set<User> findEncadrantByCandidate(@Param("candidate") User candidate);
+
+    @Query("SELECT ia.candidate FROM InternshipApplication ia WHERE ia.encadrant = :encadrant")
+    List<User> findCandidatesByEncadrant(@Param("encadrant") User encadrant);
 }

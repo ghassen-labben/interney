@@ -1,6 +1,5 @@
 package com.example.recruitment.repositories;
 
-import com.example.recruitment.models.Internship;
 import com.example.recruitment.models.InternshipApplication;
 import com.example.recruitment.models.InternshipApplication_Id;
 import com.example.recruitment.models.User;
@@ -11,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface InternshipApplicationRepository extends JpaRepository<InternshipApplication, InternshipApplication_Id> {
@@ -21,4 +21,7 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
     void deleteByCandidateIdAndInternshipId(@Param("candidateId") Long candidateId, @Param("internshipId") Long internshipId);
 
 
+    List<InternshipApplication> findAllByEncadrantId(Long encadrantId);
+    @Query("select  ia from InternshipApplication ia where ia.id.internshipId = :internshipId")
+    List<InternshipApplication> findAllByInternshipId(Long internshipId);
 }
