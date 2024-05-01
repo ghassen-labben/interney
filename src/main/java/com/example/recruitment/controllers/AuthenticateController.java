@@ -27,14 +27,6 @@ public class AuthenticateController {
 
 
 
-    @GetMapping( "/user" )
-    public UserDetails firstPage(HttpServletRequest request) {
-String username=jwtTokenUtil.extractUsername(request.getHeader("Authorization").split(" ")[1]);
-UserDetails userDetails=userDetailsService.loadUserByUsername(username);
-
-        return userDetails;
-    }
-
 
 
     @RequestMapping(value = "/authenticate", method = RequestMethod.POST)

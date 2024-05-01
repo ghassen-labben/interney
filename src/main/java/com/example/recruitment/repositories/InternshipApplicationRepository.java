@@ -24,4 +24,6 @@ public interface InternshipApplicationRepository extends JpaRepository<Internshi
     List<InternshipApplication> findAllByEncadrantId(Long encadrantId);
     @Query("select  ia from InternshipApplication ia where ia.id.internshipId = :internshipId")
     List<InternshipApplication> findAllByInternshipId(Long internshipId);
+
+    List<InternshipApplication> findAllByCandidateId(Long candidateId);
 }

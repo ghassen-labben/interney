@@ -30,20 +30,14 @@ public class Authority implements GrantedAuthority ,Serializable {
     @NotNull
     @Id
     @Column(name = "id", length = 50) // Specify the column name
-    private String name;
+    private String authority;
 
     public Authority() {
 
     }
 
 
-    public String getName() {
-        return name;
-    }
 
-    public void setName(String name) {
-        this.name = name;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -53,12 +47,12 @@ public class Authority implements GrantedAuthority ,Serializable {
         if (!(o instanceof Authority)) {
             return false;
         }
-        return Objects.equals(name, ((Authority) o).name);
+        return Objects.equals(authority, ((Authority) o).authority);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(name);
+        return Objects.hashCode(authority);
     }
 
     @Override
@@ -68,7 +62,6 @@ public class Authority implements GrantedAuthority ,Serializable {
 
     @Override
     public String getAuthority() {
-        return getName();
-
+        return this.authority;
     }
 }

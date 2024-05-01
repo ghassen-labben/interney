@@ -3,20 +3,24 @@ package com.example.recruitment.controllers;
 import com.example.recruitment.config.Utils;
 import com.example.recruitment.models.*;
 import com.example.recruitment.repositories.UserRepository;
+import com.example.recruitment.services.CustomUserDetailsService;
 import com.example.recruitment.services.DepartmentService;
 import com.example.recruitment.services.EmailService;
-import com.example.recruitment.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,7 +28,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/users")
 public class UserController {
     @Autowired
-    private  UserService userService;
+    private CustomUserDetailsService userService;
 
     @Autowired
     private UserRepository userRepository;
@@ -36,11 +40,16 @@ public class UserController {
     private Utils jwtTokenUtil;
 
     @Autowired
-     private     DepartmentService departmentService;
+     private  DepartmentService departmentService;
 
     @Autowired
     private AttachmentController attachmentController;
 
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    public UserController( KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
     @GetMapping
     public ResponseEntity<Set<User>> getAllUsers(HttpServletRequest request) {
         Set<User> users = userService.findConnectedUsers(request);
@@ -67,13 +76,14 @@ public class UserController {
 
     @MessageMapping("/user.addUser")
     @SendTo("/user/public")
-    public User addUser(
-            @Payload User user
-    ) {
-user.setStatus(true);
-        userService.saveUser(user);
-        return user;
+    public User addUser(@Payload User user, @Header("simpSessionId") String sessionId) {
+        User user2 = userService.getUserByUsername(user.getUsername());
+        user2.setStatus(true);
+        userService.saveUser(user2);
+
+        return user2;
     }
+
 
     @MessageMapping("/user.disconnectUser")
     @SendTo("/user/public")
@@ -123,14 +133,12 @@ user.setStatus(true);
             departmentService.saveDepartment(department);
         }
         User newUser = userRepository.save(user);
-
-        if(user.getCreatedBy()!=null && user.getCreatedBy().equals("admin"))
-        {
-            EmailDetails emailDetails=new EmailDetails(email,"email : "+email+" | password : "+password,"yoour account info");
-            emailService.sendSimpleMail(emailDetails);
+        if (user.getCreatedBy() != null && user.getCreatedBy().equals("admin")) {
+            EmailDetails emailDetails = new EmailDetails(email, "email : " + email + " | password : " + password, "your account info");
+            kafkaTemplate.send("email-topic", emailDetails);
         }
-
         return ResponseEntity.status(HttpStatus.CREATED).body(newUser);
+
     }
     @GetMapping("/{userId}/profileImage")
     public  ResponseEntity<Resource> getProfilePicture(@PathVariable Long userId)

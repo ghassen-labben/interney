@@ -45,9 +45,9 @@ public class RecruitmentApplication implements CommandLineRunner {
 	}
 
 	private void createAuthorityIfNotExists(String name) {
-		if (!authorityRepository.existsByName(name)) {
+		if (!authorityRepository.existsByAuthority(name)) {
 			Authority authority = new Authority("ROLE_USER");
-			authority.setName(name);
+			authority.setAuthority(name);
 			authorityRepository.save(authority);
 		}
 	}

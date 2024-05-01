@@ -72,10 +72,19 @@ public class User implements UserDetails, Serializable  {
     @OrderBy
     private Collection<Authority> authorities;
 
-    @NotAudited
     @JsonIgnore
     @OneToMany(mappedBy = "candidate",cascade = CascadeType.ALL)
     Set<InternshipApplication> appliedInternships;
+
+    public User(String username, String password, String email, Boolean status) {
+        this.username = username;
+        this.password = password;
+        this.email = email;
+        this.status = status;
+    }
+    @JsonIgnore
+    @ManyToMany(mappedBy = "users")
+    private Set<Notification> notifications;
 
     @Override
     public String toString() {
@@ -110,10 +119,6 @@ public class User implements UserDetails, Serializable  {
     }
 
 
-public Boolean isAvailable()
-{
-   return this.getApplicationsSupervisees().size()>=maxEncadramant;
-}
     public void addApplicationSupervisees(InternshipApplication internshipApplication) throws Exception {
         if(applicationsSupervisees.stream()
                 .filter(InternshipApplication::isFullyAccepted)

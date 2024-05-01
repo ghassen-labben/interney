@@ -1,12 +1,12 @@
 package com.example.recruitment.controllers;
 
 import com.example.recruitment.config.Utils;
-import com.example.recruitment.models.InternshipApplication;
-import com.example.recruitment.models.InternshipApplication_Id;
-import com.example.recruitment.models.User;
+import com.example.recruitment.models.*;
+import com.example.recruitment.repositories.TaskRepository;
 import com.example.recruitment.services.CustomUserDetailsService;
 import com.example.recruitment.services.InternshipApplicationService;
 import com.example.recruitment.services.InternshipService;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/internship-applications")
@@ -24,11 +25,13 @@ public class InternshipApplicationController {
     private final InternshipApplicationService internshipApplicationService;
     private final Utils jwtUtil;
     private final CustomUserDetailsService userDetailsService;
+    private  final TaskRepository taskRepository;
     @Autowired
-    public InternshipApplicationController(InternshipApplicationService internshipApplicationService, Utils jwtUtil, CustomUserDetailsService userDetailsService) {
+    public InternshipApplicationController(TaskRepository taskRepository,InternshipApplicationService internshipApplicationService, Utils jwtUtil, CustomUserDetailsService userDetailsService) {
         this.internshipApplicationService = internshipApplicationService;
         this.jwtUtil = jwtUtil;
         this.userDetailsService=userDetailsService;
+        this.taskRepository=taskRepository;
     }
 
     @PostMapping
@@ -39,10 +42,44 @@ public class InternshipApplicationController {
             return ResponseEntity.badRequest().body("You have already applied for this internship");
         }
 
-        InternshipApplication savedApplication = internshipApplicationService.saveInternshipApplication(internshipId, user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedApplication);
+        try {
+            InternshipApplication application = internshipApplicationService.saveInternshipApplication(internshipId, user);
+            return ResponseEntity.ok(application);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
+    @GetMapping("/{candidateId}/{internshipId}/tasks")
+    public ResponseEntity<List<Task>> getTasks(@PathVariable Long candidateId,@PathVariable Long internshipId) throws Exception {
+        InternshipApplication_Id internshipApplicationId=new InternshipApplication_Id(internshipId,candidateId);
+        List<Task> tasks=internshipApplicationService.getTasks(internshipApplicationId);
+        return ResponseEntity.ok(tasks);
+    }
+    @GetMapping("/tasks")
+    public ResponseEntity<List<Task>> getTasksByCandidate(HttpServletRequest request) throws Exception {
+User user =this.userDetailsService.getUser(request);
+             List<InternshipApplication> internshipApplicationList= user.getAppliedInternships().stream().filter(InternshipApplication::isFullyAccepted).collect(Collectors.toList());
+
+        return ResponseEntity.ok(internshipApplicationList.get(0).getTasks());
+    }
+
+    @PostMapping("/{candidateId}/{internshipId}/tasks")
+    public ResponseEntity<Task> addTaskToInternshipApplication(@PathVariable Long candidateId,@PathVariable Long internshipId,
+                                                               @RequestBody Task task) throws Exception {
+        InternshipApplication_Id internshipApplicationId=new InternshipApplication_Id(internshipId,candidateId);
+        internshipApplicationService.addTaskToInternshipApplication(internshipApplicationId, task);
+        return ResponseEntity.ok(task);
+    }
+
+    @PutMapping("/tasks/{taskId}/{status}")
+    public ResponseEntity<Task> markTaskAsStatus(@PathVariable Long taskId, @PathVariable Status status) throws Exception {
+        internshipApplicationService.markTaskAsStatus(taskId,status);
+        Task completedTask = taskRepository.findById(taskId)
+                .orElseThrow(() -> new Exception("Task not found"));
+        return ResponseEntity.ok(completedTask);
+    }
 
 
     @GetMapping
@@ -62,7 +99,6 @@ public class InternshipApplicationController {
     @GetMapping("/{candidateId}/{internshipId}")
     public ResponseEntity<InternshipApplication> getInternshipApplicationById(@PathVariable Long candidateId, @PathVariable Long internshipId) {
         InternshipApplication_Id id = new InternshipApplication_Id(candidateId, internshipId);
-        System.out.println(id);
         Optional<InternshipApplication> internshipApplication = internshipApplicationService.getInternshipApplicationById(id);
         return internshipApplication.map(application -> new ResponseEntity<>(application, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));

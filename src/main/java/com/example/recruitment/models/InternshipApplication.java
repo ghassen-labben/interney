@@ -1,5 +1,6 @@
 package com.example.recruitment.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -9,6 +10,8 @@ import javax.persistence.*;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -41,6 +44,22 @@ public class InternshipApplication implements Serializable {
         this.id = id;
         this.candidate = candidate;
         this.internship = internship;
+    }
+
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "internshipApplication", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Task> tasks = new ArrayList<>();
+
+
+    public void addTask(Task task) {
+        tasks.add(task);
+        task.setInternshipApplication(this);
+    }
+
+    public void removeTask(Task task) {
+        tasks.remove(task);
+        task.setInternshipApplication(null);
     }
 
     @CreationTimestamp

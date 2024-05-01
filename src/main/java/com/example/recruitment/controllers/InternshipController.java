@@ -1,14 +1,16 @@
 package com.example.recruitment.controllers;
 
 import com.example.recruitment.models.*;
-import com.example.recruitment.repositories.SkillRepository;
-import com.example.recruitment.repositories.UserRepository;
+import com.example.recruitment.services.CustomUserDetailsService;
 import com.example.recruitment.services.InternshipService;
+import com.example.recruitment.services.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,12 +21,16 @@ public class InternshipController {
 
     private final InternshipService internshipService;
 
+    private final NotificationService notificationService;
 
+    private final CustomUserDetailsService userService;
 
 
     @Autowired
-    public InternshipController(InternshipService internshipService) {
+    public InternshipController(InternshipService internshipService, NotificationService notificationService, CustomUserDetailsService userService) {
         this.internshipService = internshipService;
+        this.notificationService = notificationService;
+        this.userService = userService;
     }
 
 
@@ -92,18 +98,29 @@ public class InternshipController {
         return internship.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
+
+
+
     @PostMapping
     public ResponseEntity<Internship> saveInternship(@RequestBody Internship internship) {
         try {
-System.out.println(internship);
             Internship savedInternship = internshipService.saveInternship(internship);
+            List<User> users = userService.findByAuthority("ROLE_USER");
+            System.out.println(users);
+
+            String notificationType = "new-internship";
+            String message = "A new internship opportunity has been posted: http://localhost:4200/internship/" + savedInternship.getId();
+            Notification notification = new Notification(new HashSet<>(users), notificationType, message);
+
+            notificationService.sendNotification(notification);
+
             return new ResponseEntity<>(savedInternship, HttpStatus.CREATED);
         } catch (Exception e) {
+            // Log the exception for debugging purposes
+            System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
-
-
 
     @PutMapping("/{id}")
     public ResponseEntity<Internship> updateInternship(@PathVariable Long id, @RequestBody Internship internship) {

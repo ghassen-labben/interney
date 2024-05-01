@@ -36,11 +36,10 @@ public class ChatController {
             messagingTemplate.convertAndSendToUser(
                     chatMessage.getRecipient().getUsername(), destinationForRecipient, notificationForRecipient);
 
-            // Send notification to the sender's queue
             String destinationForSender = "/queue/messages";
             ChatNotification notificationForSender = new ChatNotification(
                     savedMsg.getSender(), savedMsg.getRecipient(), savedMsg.getContent());
-            notificationForSender.setSeen(true); // Mark the message as seen for the sender
+            notificationForSender.setSeen(true);
             messagingTemplate.convertAndSendToUser(
                     chatMessage.getSender().getUsername(), destinationForSender, notificationForSender);
         } catch (Exception e) {

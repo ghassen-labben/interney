@@ -1,12 +1,13 @@
 package com.example.recruitment.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
+@Setter
+@ToString
 public class EmailDetails {
     private String recipient;
     private String msgBody;

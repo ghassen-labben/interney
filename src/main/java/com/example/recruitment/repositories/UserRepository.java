@@ -27,6 +27,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByUsername(String username);
 
+    @Query("SELECT u FROM User u JOIN u.authorities au WHERE au.authority = :authorityName")
+    List<User> findByAuthorityName(@Param("authorityName") String authorityName);
 
 
     @Query("SELECT u FROM User u JOIN InternshipApplication ia ON ia.encadrant = u AND ia.candidate = :candidate")
